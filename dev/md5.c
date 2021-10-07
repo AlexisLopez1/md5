@@ -1,14 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 //Methods declaration
-char ReadFile(char *file_name);         //Read txt file.
+char ValidateFileSize(char *file_name); //Validate if the file < 256 bytes
+void ReadFile(char *file_name);         //Read txt file.
 void md5(char *init_msg, int init_len); //Main function.
 void TestingLen(char *msg, int len);    //Only for testing purposes.
 
 //Global definitions
-#define uint unsigned int 
+#define uint unsigned int
 #define F(x, y, z) ((x & y) | (~x & z))
 #define G(x, y, z) ((x & z) | (y & ~z))
 #define H(x, y, z) (x ^ y ^ z)
@@ -38,20 +40,72 @@ void TestingLen(char *msg, int len);    //Only for testing purposes.
     }
 
 //Global variables declaration.
+char text[256];
+int flag = 0;
 //STEP 3.
 uint A = 0x67452301;
 uint B = 0xefcdab89;
 uint C = 0x98badcfe;
 uint D = 0x10325476;
 
-int main(int argc, char *args[])
+int main(int argc, char **args)
 {
-    char *msg = "Hello World";
-    int len = strlen(msg);
+    char *msg = "Hello";
+    int len = 0;
+    
+    ReadFile(args[1]);
+    msg = text;
+    len = strlen(msg);
 
-    md5(msg, len);
+    if (msg != 0)
+    {
+       md5(msg, len);
+    }
 
     return 0;
+}
+
+void ReadFile(char *file_name)
+{
+
+    if (ValidateFileSize(file_name) == 1)
+    {
+        int ch;
+        FILE *file = fopen(file_name, "r");
+
+        int i = 0;
+        while ((ch = fgetc(file)) != EOF)
+        {
+            text[i] = ch;
+            i++;
+        }
+
+        fclose(file);
+        flag = 1;
+    }
+    else
+    {
+        flag = 0;
+        printf("\nError al intentar leer el archivo.");
+    }
+}
+
+char ValidateFileSize(char *file_name)
+{
+    struct stat st;
+    int size = 0;
+    stat(file_name, &st);
+    size = st.st_size;
+
+    if (size < 256)
+    {
+        return 1;
+    }
+    else
+    {
+        printf("The file size can't be less than 256");
+        return 0;
+    }
 }
 
 void md5(char *init_msg, int init_len)
@@ -176,17 +230,17 @@ void md5(char *init_msg, int init_len)
 
     //STEP 5. Print result
     uint8_t *p;
- 
-    p=(uint8_t *)&A;
+
+    p = (uint8_t *)&A;
     printf("%2.2x%2.2x%2.2x%2.2x", p[0], p[1], p[2], p[3], A);
- 
-    p=(uint8_t *)&B;
+
+    p = (uint8_t *)&B;
     printf("%2.2x%2.2x%2.2x%2.2x", p[0], p[1], p[2], p[3], B);
- 
-    p=(uint8_t *)&C;
+
+    p = (uint8_t *)&C;
     printf("%2.2x%2.2x%2.2x%2.2x", p[0], p[1], p[2], p[3], C);
- 
-    p=(uint8_t *)&D;
+
+    p = (uint8_t *)&D;
     printf("%2.2x%2.2x%2.2x%2.2x", p[0], p[1], p[2], p[3], D);
     printf("\n");
 }
